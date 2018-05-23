@@ -153,3 +153,77 @@ exports.check = (req, res, next) => {
         answer
     });
 };
+
+// GET /quizzes/randomplay
+exports.randomPlay = (req, res, next) => {
+    
+    // guardo en req.session.resolved las preguntas que he contestado
+    req.session.resolved = req.session.resolved || [];
+    
+    Sequelize.Promise.resolve()
+    .then(() => {
+        // condicion: que no esten en el array de preguntas que ya he contestado
+        const whereOpt = {'id': {[Sequelize.Op.notIn]: req.session.resolved}};
+        
+        // cojo las preguntas que no he contestado todavia
+        return models.quiz.count({where: whereOpt})
+        // count = num de preguntas que no he contestado todavia
+        .then(count => {
+            // score = num de preguntas que he contestado ya (correctamente)
+            let score = req.session.resolved.length;
+            if (count === 0) {
+                delete req.session.resolved;
+                res.render('quizzes/random_nomore', {score});
+            }
+            let aleat = Math.floor(Math.random() * count);
+            
+            return models.quiz.findAll({
+                where: whereOpt,
+                offset: aleat,
+                limit: 1
+            })
+            .then(quizzes => {
+                return quizzes[0];
+            });
+        })
+        .catch(error => {
+            req.flash('error', `Error deleting the quiz: ${error.message}`);
+            next(error);
+        });
+    })
+    .then(quiz => {
+        console.log(`QUIZ: ${quiz}`);
+        let score = req.session.resolved.length;
+        res.render('quizzes/random_play', {quiz, score});
+    });
+};
+
+// GET /quizzes/randomcheck
+exports.randomCheck = (req, res, next) => {
+    
+    req.session.resolved = req.session.resolved || [];
+    const answer = req.query.answer;
+    const result = answer.toLowerCase().trim() === req.quiz.answer.toLowerCase().trim();
+    let score = req.session.resolved.length;
+    console.log(score);
+    if (result) {
+        if (req.session.resolved.indexOf(req.quiz.id) === -1) {
+            req.session.resolved.push(req.quiz.id);
+            score = req.session.resolved.length;
+        }
+        
+        models.quiz.count()
+        .then(count => {
+            if (score > count) {
+                delete req.session.resolved;
+                res.render('quizzes/random_result', {result, score, answer});
+            } else {
+                res.render('quizzes/random_result', {result, score, answer});
+            }
+        });
+    } else {
+        let score = req.session.resolved.length;
+        delete req.session.resolved;
+        res.render('quizzes/random_result', {result, score, answer});
+    }
+};
