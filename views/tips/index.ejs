@@ -1,4 +1,3 @@
-
 <ul>
     <% for (var i in tips) { %>
         <% var tip = tips[i]; %>
@@ -11,6 +10,8 @@
 
             <li>
                 <%= tip.text %>
+
+                (by <%= tip.author ? tip.author.username : 'Anonymous' %>)
 
                 <% if (!accepted && (isAdmin || isQuizAuthor)) { %>
 
