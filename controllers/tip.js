@@ -17,6 +17,20 @@ exports.load = (req, res, next, tipId) => {
     .catch(error => next(error));
 };
 
+// MW that allows actions only if the user logged in is admin or is the author of the quiz.
+exports.adminOrAuthorRequired = (req, res, next) => {
+    
+    const isAdmin  = !!req.session.user.isAdmin;
+    const isAuthor = req.tip.authorId === req.session.user.id;
+    
+    if (isAdmin || isAuthor) {
+        next();
+    } else {
+        console.log('Prohibited operation: The logged in user is not the author of the tip, nor an administrator.');
+        res.send(403);
+    }
+};
+
 
 // POST /quizzes/:quizId/tips
 exports.create = (req, res, next) => {
@@ -75,3 +89,35 @@ exports.destroy = (req, res, next) => {
     .catch(error => next(error));
 };
 
+// GET /quizzes/:quizId/tips/:tipId/edit
+exports.edit = (req, res, next) => {
+    
+    const {tip, quiz} = req;
+    
+    res.render('tips/edit', {tip, quiz});
+};
+
+
+// PUT /quizzes/:quizId/tips/:tipId
+exports.update = (req, res, next) => {
+    
+    const {quiz, tip, body} = req;
+    
+    tip.text = body.text;
+    tip.accepted = false;
+    
+    tip.save({fields: ["text"]})
+        .then(tip => {
+            req.flash('success', 'Tip edited successfully.');
+            res.redirect('/goback');
+        })
+        .catch(Sequelize.ValidationError, error => {
+            req.flash('error', 'There are errors in the form:');
+            error.errors.forEach(({message}) => req.flash('error', message));
+            res.render('tips/edit', {tip, quiz});
+        })
+        .catch(error => {
+            req.flash('error', 'Error editing the tip: ' + error.message);
+            next(error);
+        });
+};
