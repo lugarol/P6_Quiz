@@ -1,10 +1,14 @@
 const express = require('express');
 const router = express.Router();
 
+const multer  = require('multer');
+const upload = multer({ dest: './uploads/' });
+
 const quizController = require('../controllers/quiz');
 const tipController = require('../controllers/tip');
 const userController = require('../controllers/user');
 const sessionController = require('../controllers/session');
+const favouriteController = require('../controllers/favourite');
 
 //-----------------------------------------------------------
 
@@ -33,11 +37,10 @@ function saveBack(req, res, next) {
 // Restoration routes are GET routes that do not end in:
 //   /new, /edit, /play, /check, /session, or /:id.
 router.get([
-    '/',
-    '/author',
-    '/users',
-    '/users/:id(\\d+)/quizzes',
-    '/quizzes'], saveBack);
+'/','/author',
+'/users',
+'/users/:id(\\d+)/quizzes',
+'/quizzes'],                 saveBack);
 
 //-----------------------------------------------------------
 
@@ -87,20 +90,22 @@ router.delete('/users/:userId(\\d+)',
     sessionController.adminOrMyselfRequired,
 	userController.destroy);
 
+
 router.get('/users/:userId(\\d+)/quizzes',
     sessionController.loginRequired,
     quizController.index);
 
 // Routes for the resource /quizzes
-router.get('/quizzes',
+router.get('/quizzes.:format?',
 	quizController.index);
-router.get('/quizzes/:quizId(\\d+)',
+router.get('/quizzes/:quizId(\\d+).:format?',
 	quizController.show);
 router.get('/quizzes/new',
     sessionController.loginRequired,
 	quizController.new);
 router.post('/quizzes',
     sessionController.loginRequired,
+    upload.single('image'),
 	quizController.create);
 router.get('/quizzes/:quizId(\\d+)/edit',
     sessionController.loginRequired,
@@ -109,14 +114,17 @@ router.get('/quizzes/:quizId(\\d+)/edit',
 router.put('/quizzes/:quizId(\\d+)',
     sessionController.loginRequired,
     quizController.adminOrAuthorRequired,
+    upload.single('image'),
 	quizController.update);
 router.delete('/quizzes/:quizId(\\d+)',
     sessionController.loginRequired,
     quizController.adminOrAuthorRequired,
 	quizController.destroy);
 
-router.get('/quizzes/:quizId(\\d+)/play',  quizController.play);
-router.get('/quizzes/:quizId(\\d+)/check', quizController.check);
+router.get('/quizzes/:quizId(\\d+)/play',
+	quizController.play);
+router.get('/quizzes/:quizId(\\d+)/check',
+	quizController.check);
 
 router.get('/quizzes/randomplay', quizController.randomPlay);
 // router.get('/quizzes/randomcheck', quizController.randomCheck);
@@ -124,9 +132,9 @@ router.get('/quizzes/randomcheck/:quizId(\\d+)', quizController.randomCheck);
 
 
 
-router.post('/quizzes/:quizId(\\d+)/tips',
+router.post('/quizzes/:quizId(\\d+)/tips',     
     sessionController.loginRequired,
-    tipController.create);
+	tipController.create);
 router.put('/quizzes/:quizId(\\d+)/tips/:tipId(\\d+)/accept',
     sessionController.loginRequired,
     quizController.adminOrAuthorRequired,
@@ -144,6 +152,17 @@ router.put('/quizzes/:quizId(\\d+)/tips/:tipId(\\d+)',
     sessionController.loginRequired,
     tipController.adminOrAuthorRequired,
     tipController.update);
+
+
+// Routes for the resource favourites of a user
+router.put('/users/:userId(\\d+)/favourites/:quizId(\\d+)',
+    sessionController.loginRequired,
+    sessionController.adminOrMyselfRequired,
+    favouriteController.add);
+router.delete('/users/:userId(\\d+)/favourites/:quizId(\\d+)',
+    sessionController.loginRequired,
+    sessionController.adminOrMyselfRequired,
+    favouriteController.del);
 
 
 module.exports = router;
