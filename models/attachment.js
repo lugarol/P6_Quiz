@@ -1,4 +1,3 @@
-
 // Definition of the Attachment model:
 
 module.exports = (sequelize, DataTypes) => {
@@ -29,4 +28,4 @@ module.exports = (sequelize, DataTypes) => {
                 }
             }
         });
-}
+};

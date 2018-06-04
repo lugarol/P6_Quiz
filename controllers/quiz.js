@@ -7,7 +7,7 @@ const attHelper = require("../helpers/attachments");
 
 const paginate = require('../helpers/paginate').paginate;
 
-// Optios for the files uploaded to Cloudinary
+// Options for the files uploaded to Cloudinary
 const cloudinary_upload_options = {
     async: true,
     folder: "/core/quiz2018/attachments",
@@ -495,6 +495,7 @@ exports.check = (req, res, next) => {
     });
 };
 
+
 // GET /quizzes/randomplay
 exports.randomPlay = (req, res, next) => {
     
@@ -538,6 +539,7 @@ exports.randomPlay = (req, res, next) => {
         res.render('quizzes/random_play', {quiz, score});
     });
 };
+
 
 // GET /quizzes/randomcheck
 exports.randomCheck = (req, res, next) => {

@@ -30,7 +30,7 @@ exports.uploadResourceToCloudinary = (path, options) => {
 
 
 /**
- * Checks that the CLOUDINAY_URL environmnet variable exists.
+ * Checks that the CLOUDINAY_URL environment variable exists.
  *
  * Returns a Promise.
  */
